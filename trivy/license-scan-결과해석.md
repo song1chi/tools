@@ -1,3 +1,8 @@
+참고: [trivy license 정식 설명 문서](https://trivy.dev/docs/latest/guide/scanner/license/)
+
+
+# 아래 내용은 검증 전 (AI 환각 주의)
+
 Trivy의 라이선스 스캔에서 **Severity(심각도)**는 보안 취약점(CVE)과 달리 **"법적 리스크(Legal Risk)"**를 의미합니다.
 
 즉, **"이 라이선스를 사용했을 때 우리 프로젝트의 소스 코드를 강제로 공개해야 하거나, 저작권 소송에 휘말릴 위험이 얼마나 큰가?"**를 나타내는 척도입니다.
