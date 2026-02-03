@@ -51,37 +51,9 @@ bkimminich/juice-shop:v12.0.0
 docker images --format "{{.Repository}}:{{.Tag}}" | grep -v "<none>" > scan_list.txt
 ```
 
-### 3-2. 스캔 모드 선택 (스크립트 수정)
+### 3-2. 필요시 스캔 스크립트 수정
 
-`trivy_batch.sh` 파일을 열어 원하는 스캔 모드(취약점 vs 라이선스)에 따라 주석(`#`)을 해제하거나 설정합니다.
-
-**옵션 1: 보안 취약점(Vulnerability) 스캔 (기본값)**
-
-```bash
-# [Option 1] 부분이 활성화되어 있어야 합니다.
-sudo docker run --rm \
-    ...
-    aquasec/trivy image \
-    --format template \
-    --template "@contrib/html.tpl" \
-    ...
-
-```
-
-**옵션 2: 라이선스(License) 스캔**
-
-```bash
-# [Option 1] 전체를 주석(#) 처리하고, [Option 2]의 주석을 해제합니다.
-# 또한 --template "@/src/license.tpl" 경로가 올바른지 확인하세요.
-
-sudo docker run --rm \
-    ...
-    --scanners license \
-    --format template \
-    --template "@/src/license.tpl" \
-    ...
-
-```
+각 스캔 스크립트를 수정하여 실행 옵션, 저장 위치 등을 편집할 수 있습니다.
 
 ## 4. 실행 방법
 
@@ -89,15 +61,16 @@ sudo docker run --rm \
 
 1. **실행 권한 부여 (최초 1회)**
 ```bash
-chmod +x trivy_batch.sh
+chmod +x trivy-*.sh
 
 ```
 
 
 2. **스크립트 실행**
 ```bash
-./trivy_batch.sh
-
+./trivy-vuln.sh
+./trivy-sbom.sh
+./trivy-license.sh
 ```
 
 
