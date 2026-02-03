@@ -1,6 +1,6 @@
-# `trivy_batch.sh` 사용 방법
+# `trivy-*.sh` 사용 방법
 
-이 문서는 여러 개의 Docker 이미지를 대상으로 [trivy](https://trivy.dev) 스캔을 일괄 수행하고, 결과를 HTML 보고서로 저장하는 `trivy_batch.sh` 스크립트의 사용법을 설명합니다.
+이 문서는 여러 개의 Docker 이미지를 대상으로 [trivy](https://trivy.dev) 스캔을 일괄 수행하고, 결과를 HTML 등의 보고서로 저장하는 `trivy-*.sh` 스크립트의 사용법을 설명합니다.
 
 ## 1. 사전 준비 사항 (Prerequisites)
 
@@ -21,7 +21,10 @@ docker pull aquasec/trivy
 
 ```text
 .
-├── trivy_batch.sh       # 실행 스크립트
+├── trivy-license.sh     # 실행 스크립트 - license-long.html, license-short.html 생성
+├── trivy-sbom.sh        # 실행 스크립트 - cyclonedx 및 spdx 형식의 SBOM 파일 생성(json)
+├── trivy-vlun.sh        # 실행 스크립트 - 취약점 정보 파일 생성 ( vuln.html)
+|                        # (공백 줄)
 ├── scan_list.txt        # 스캔할 이미지 목록 (사용자가 생성)
 ├── license.tpl          # 라이선스 리포트용 템플릿 (라이선스 스캔 시 필수)
 └── trivy_reports/       # (자동 생성됨) 결과 보고서가 저장될 폴더
