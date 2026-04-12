@@ -5,6 +5,17 @@ INPUT_FILE="scan_list.txt"       # 이미지 목록 파일
 OUTPUT_DIR="./trivy_reports"     # 결과 저장될 폴더
 CACHE_DIR="$HOME/.cache/trivy"   # Trivy 캐시 폴더
 TEMPLATE_PATH="$PWD/license.tpl" # (라이선스 스캔 시) 템플릿 경로
+CHECKER_IMAGE=ghcr.io/aquasecurity/trivy
+
+# Podman API 소켓 (Trivy는 Docker 호환 API로 로컬 이미지 접근)
+CONTAINER_ENGINE_SOCK=""
+for s in "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock" /run/podman/podman.sock; do
+    [ -S "$s" ] && CONTAINER_ENGINE_SOCK="$s" && break
+done
+if [ -z "$CONTAINER_ENGINE_SOCK" ]; then
+    echo "Error: Podman 소켓을 찾을 수 없습니다. (예: systemctl --user start podman.socket)" >&2
+    exit 1
+fi
 
 # 결과 폴더가 없으면 생성
 mkdir -p "$OUTPUT_DIR"
@@ -29,17 +40,15 @@ while IFS= read -r image || [ -n "$image" ]; do
     # 예: bkimminich/juice-shop:v12.0.0 -> bkimminich_juice-shop__v12.0.0.html
     SAFE_NAME=$(echo "$image" | sed 's|/|_|g' | sed 's|:|__|g')
 
-    # --- Docker 실행 명령 ---
-    # 필요에 따라 아래 옵션을 주석 해제/수정하여 사용하세요.
-    
-    # SBOM Generation - cylonedx format
+    # --- Podman으로 Trivy 실행 ---
+    # SBOM Generation - cyclonedx format
     REPORT_FILE="$OUTPUT_DIR/${SAFE_NAME}-sbom-cyclonedx.json"
-    sudo docker run --rm \
-        -v /var/run/docker.sock:/var/run/docker.sock \
+    podman run --rm \
+        -v "$CONTAINER_ENGINE_SOCK":/var/run/docker.sock \
         -v "$CACHE_DIR":/root/.cache/trivy \
         -v "$OUTPUT_DIR":/output \
-        aquasec/trivy image \
-        --format cyclonedx \
+        $CHECKER_IMAGE \
+        image --format cyclonedx \
         -o "/output/${SAFE_NAME}-sbom-cyclonedx.json" \
         "$image"
 
@@ -49,8 +58,8 @@ while IFS= read -r image || [ -n "$image" ]; do
     
     # SBOM Generation - SPDX format
     REPORT_FILE="$OUTPUT_DIR/${SAFE_NAME}-sbom-spdx.json"
-    sudo docker run --rm \
-        -v /var/run/docker.sock:/var/run/docker.sock \
+    podman run --rm \
+        -v "$CONTAINER_ENGINE_SOCK":/var/run/docker.sock \
         -v "$CACHE_DIR":/root/.cache/trivy \
         -v "$OUTPUT_DIR":/output \
         aquasec/trivy image \

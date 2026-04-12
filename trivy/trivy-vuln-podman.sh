@@ -6,7 +6,7 @@ OUTPUT_DIR="./trivy_reports"     # 결과 저장될 폴더
 CACHE_DIR="$HOME/.cache/trivy"   # Trivy 캐시 폴더
 TEMPLATE_PATH="$PWD/license.tpl" # (라이선스 스캔 시) 템플릿 경로
 
-# Podman API 소켓 (Trivy는 Docker 호환 API로 로컬 이미지 접근)
+# Podman API 소켓 → Trivy 컨테이너는 Docker 호환 소켓으로 로컬 이미지에 접근
 CONTAINER_ENGINE_SOCK=""
 for s in "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock" /run/podman/podman.sock; do
     [ -S "$s" ] && CONTAINER_ENGINE_SOCK="$s" && break
@@ -38,39 +38,34 @@ while IFS= read -r image || [ -n "$image" ]; do
     # 이미지 이름에서 파일명에 쓸 수 없는 문자(/, :)를 밑줄(_)로 변경
     # 예: bkimminich/juice-shop:v12.0.0 -> bkimminich_juice-shop__v12.0.0.html
     SAFE_NAME=$(echo "$image" | sed 's|/|_|g' | sed 's|:|__|g')
+    REPORT_FILE="$OUTPUT_DIR/${SAFE_NAME}-vuln.html"
 
     # --- Podman으로 Trivy 실행 ---
-    # [Option 1] 라이선스 스캔 (전체)
-    REPORT_FILE="$OUTPUT_DIR/${SAFE_NAME}-license-long.html"
+    # [Option 1] 일반 보안 취약점(Vulnerability) 스캔 (기본)
+
     podman run --rm \
         -v "$CONTAINER_ENGINE_SOCK":/var/run/docker.sock \
         -v "$CACHE_DIR":/root/.cache/trivy \
-        -v "$PWD":/.opt \
         -v "$OUTPUT_DIR":/output \
-        aquasec/trivy image \
-	--scanners license \
+        ghcr.io/aquasecurity/trivy image \
         --format template \
-        --template "@/.opt/license.tpl" \
-        -o "/output/${SAFE_NAME}-license-long.html" \
+        --template "@contrib/html.tpl" \
+        -o "/output/${SAFE_NAME}-vuln.html" \
         "$image"
 
-    echo "Result saved: $REPORT_FILE"
-    echo ""
-
-    # [Option 2] 라이선스 스캔 (HIGH/CRITICAL 등)
-    REPORT_FILE="$OUTPUT_DIR/${SAFE_NAME}-license-short.html"
-    podman run --rm \
-        -v "$CONTAINER_ENGINE_SOCK":/var/run/docker.sock \
-        -v "$CACHE_DIR":/root/.cache/trivy \
-        -v "$PWD":/.opt \
-        -v "$OUTPUT_DIR":/output \
-        aquasec/trivy image \
-	--scanners license \
-	--severity UNKNOWN,HIGH,CRITICAL \
-        --format template \
-        --template "@/.opt/license.tpl" \
-        -o "/output/${SAFE_NAME}-license-short.html" \
-        "$image"
+    # [Option 2] 라이선스(License) 스캔 (사용자님 커스텀 템플릿 사용 시)
+    # 아래 주석을 해제하고 위 [Option 1]을 주석 처리하세요.
+    # podman run --rm \
+    #     -v "$CONTAINER_ENGINE_SOCK":/var/run/docker.sock \
+    #     -v "$CACHE_DIR":/root/.cache/trivy \
+    #     -v "$PWD":/src \
+    #     -v "$OUTPUT_DIR":/output \
+    #     aquasec/trivy image \
+    #     --scanners license \
+    #     --format template \
+    #     --template "@/src/license.tpl" \
+    #     -o "/output/${SAFE_NAME}.html" \
+    #     "$image"
 
     echo "Result saved: $REPORT_FILE"
 

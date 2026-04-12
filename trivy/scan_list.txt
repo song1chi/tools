@@ -1,0 +1,2 @@
+deepcube.kr/llama-server-8711-cuda12.4-multi-gpu:20260412-1841
+ghcr.io/ggml-org/llama.cpp:server-cuda

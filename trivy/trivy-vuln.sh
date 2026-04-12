@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#SUDO=sudo
+SUDO=""
+
+#SUDO=sudo
+SUDO=""
+
 # --- 설정 구간 ---
 INPUT_FILE="scan_list.txt"       # 이미지 목록 파일
 OUTPUT_DIR="./trivy_reports"     # 결과 저장될 폴더
@@ -34,11 +40,14 @@ while IFS= read -r image || [ -n "$image" ]; do
     # 필요에 따라 아래 옵션을 주석 해제/수정하여 사용하세요.
     
     # [Option 1] 일반 보안 취약점(Vulnerability) 스캔 (기본)
-    sudo docker run --rm \
+
+#        aquasec/trivy image \
+
+    ${SUDO} docker run --rm \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v "$CACHE_DIR":/root/.cache/trivy \
         -v "$OUTPUT_DIR":/output \
-        aquasec/trivy image \
+        ghcr.io/aquasecurity/trivy image \
         --format template \
         --template "@contrib/html.tpl" \
         -o "/output/${SAFE_NAME}-vuln.html" \
@@ -46,7 +55,7 @@ while IFS= read -r image || [ -n "$image" ]; do
 
     # [Option 2] 라이선스(License) 스캔 (사용자님 커스텀 템플릿 사용 시)
     # 아래 주석을 해제하고 위 [Option 1]을 주석 처리하세요.
-    # sudo docker run --rm \
+    # ${SUDO} docker run --rm \
     #     -v /var/run/docker.sock:/var/run/docker.sock \
     #     -v "$CACHE_DIR":/root/.cache/trivy \
     #     -v "$PWD":/src \
